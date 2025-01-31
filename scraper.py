@@ -115,10 +115,10 @@ def main():
     logging.info(f"Search queries: {search_queries}")
 
     target_urls = [
-        #"https://220volt.kz/search?query=",
-        #"https://ekt.kz/catalog/?q=",
-        #"https://barlau.kz/catalog/?q=",
-        #"https://elcentre.kz/site_search?search_term=",
+        "https://220volt.kz/search?query=",
+        "https://ekt.kz/catalog/?q=",
+        "https://barlau.kz/catalog/?q=",
+        "https://elcentre.kz/site_search?search_term=",
         "https://intant.kz/catalog/?q="
     ]
 
