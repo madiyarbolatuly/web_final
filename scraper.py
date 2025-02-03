@@ -34,12 +34,13 @@ chrome_options.add_experimental_option("prefs", {"profile.managed_default_conten
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def clean_price(price_text):
-    match = re.search(r'(\d[\d\s]*[. ,]?\d{0,2})(₸|тг|KZT)', price_text)
+    match = re.search(r'(\d[\d\s]*[.,]?\d{0,2})(₸|тг|KZT)', price_text)
     if match:
-        number = match.group(1).replace(' ', '')
+        number = match.group(1).replace(' ', '').replace(',', '.')
         currency = match.group(2)
         return f"{number} {currency}"
     return "Цена по запросу"
+
 def scraper(target_url, query):
     search_url = f"{target_url}{query}"
     driver.get(search_url)
@@ -98,7 +99,7 @@ def merge_excel_files(parsing_file, scraped_data, output_file, target_urls):
         for sheet_name, df in dfs.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
             if sheet_name in scraped_data:
-                scraped_df = pd.DataFrame(scraped_data[sheet_name], columns=["Артикул"] + [f"Сайт {url}" for url in target_urls])
+                scraped_df = pd.DataFrame(scraped_data[sheet_name], columns=[f"Сайт {url}" for url in target_urls])
                 scraped_df.to_excel(writer, sheet_name=sheet_name, startcol=len(df.columns), index=False)
         
         logging.info(f"Мердж {output_file}")
@@ -116,10 +117,10 @@ def main():
 
     target_urls = [
         "https://220volt.kz/search?query=",
-        "https://ekt.kz/catalog/?q=",
-        "https://barlau.kz/catalog/?q=",
-        "https://elcentre.kz/site_search?search_term=",
-        "https://intant.kz/catalog/?q="
+        #"https://ekt.kz/catalog/?q=",
+        #"https://barlau.kz/catalog/?q=",
+        #"https://elcentre.kz/site_search?search_term=",
+        #"https://intant.kz/catalog/?q="
     ]
 
     final_data = {sheet: [] for sheet in search_queries}
@@ -153,5 +154,3 @@ if __name__ == "__main__":
     finally:
         driver.quit()
 
-# Terminal:
-# pip install xlsxwriter

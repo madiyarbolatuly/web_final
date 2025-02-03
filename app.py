@@ -18,13 +18,12 @@ def index():
     if request.method == 'POST':
         file = request.files['excel_file']
         if file and file.filename.endswith('.xlsx'):
-            # Save uploaded file
             input_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test.xlsx')
             file.save(input_path)
             
-            # Run scraper
+        
             try:
-                main()  # Call your existing scraper logic
+                main()  
                 output_path = os.path.join(app.config['OUTPUT_FOLDER'], 'merged.xlsx')
                 return send_file(output_path, as_attachment=True)
             except Exception as e:
