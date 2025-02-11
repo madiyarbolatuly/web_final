@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Парсер цен - Интеллектуальный сбор данных</title>
+    <title>Парсер цен - сбор данных</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -69,17 +69,6 @@
             margin-bottom: 1rem;
         }
 
-        .upload-box.success {
-            border-color: #28a745;
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .upload-box.dragover {
-            border-color: var(--primary-color);
-            background-color: #f8fbff;
-        }
-
         input[type="file"] {
             display: none;
         }
@@ -133,14 +122,126 @@
             display: none;
             font-size: 0.9rem;
         }
+        .navbar {
+            background-color: var(--primary-color);
+            height: var(--nav-height);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .logo:hover {
+            opacity: 0.9;
+        }
+
+        .navbar {
+            background: var(--primary-color);
+            padding: 0.5rem 0;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--nav-hover);
+            transform: translateY(-2px);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover i {
+            transform: scale(1.1);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 640px) {
+            .navbar .container {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .nav-link {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>GQ парсинг цен</h1>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Excel</span>
+                </a>
+                <a href="/search" class="nav-link">
+                    <i class="fas fa-search"></i>
+                    <span>Поиск</span>
+                </a>
+            </div>
         </div>
+    </nav>
 
+    <div class="container">
         <div class="upload-section">
             <form method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
                 <div class="instructions">
@@ -159,6 +260,7 @@
                     <p>Формат .xlsx</p>
                 </div>
                 <input type="file" id="file-input" name="excel_file" accept=".xlsx" required>
+
                 <div class="error-message" id="error-message"></div>
                 <div class="loader" id="loader"></div>
 
@@ -171,10 +273,41 @@
     </div>
 
     <script>
-        function showLoader() {
+       function showLoader() {
             document.getElementById('loader').style.display = 'block';
             document.querySelector('button').disabled = true;
         }
+
+        function hideLoader() {
+            document.getElementById('loader').style.display = 'none';
+            document.querySelector('button').disabled = false;
+        }
+
+        document.querySelector('form').addEventListener('submit', function(event) {
+            showLoader();
+            fetch('/', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'merged.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                hideLoader();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hideLoader();
+            });
+
+            event.preventDefault();
+        });
 
         function handleFiles(files) {
             const file = files[0];
