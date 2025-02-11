@@ -1,5 +1,6 @@
-#app.py file
+# filepath: /C:/Users/Madiyar/Desktop/GQ/scraper_final/scraper_final/src/app.py
 from flask import Flask, render_template, request, send_file, jsonify
+from flask_socketio import SocketIO, emit
 import os
 from scraper import main, scrape_prices, target_urls
 import logging
@@ -7,6 +8,7 @@ import logging
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['OUTPUT_FOLDER'] = 'outputs'
+socketio = SocketIO(app)
 
 def create_folder_if_not_exists(folder_path):
     if not os.path.exists(folder_path):
@@ -38,9 +40,9 @@ def index():
 def search():
     return render_template('search.html')
 
-@app.route('/search_artikul')
-def search_artikul():
-    artikul = request.args.get('artikul')
+@socketio.on('search_artikul')
+def handle_search_artikul(data):
+    artikul = data['artikul']
     results = []
 
     for url in target_urls:
@@ -53,8 +55,7 @@ def search_artikul():
         logging.info(f"Final data: {prices}")
         logging.info(f"Scraping completed for URL: {url}{artikul}")
 
-    return jsonify(results)
-
+    emit('search_results', results)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

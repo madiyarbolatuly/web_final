@@ -15,3 +15,5 @@
 - [o] https://iek.kz/products/catalog нет цен в каталог
 - [o] https://euroelectric.kz/ нет каталога
 - [ ] add database to the stack 
+- [x]  "https://220volt.kz/search?query=", 
+ 
