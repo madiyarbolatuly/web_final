@@ -26,12 +26,15 @@ def index():
         if file and file.filename.endswith('.xlsx'):
             input_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test.xlsx')
             file.save(input_path)
+            logging.info(f"File uploaded: {file.filename}")
             
             try:
                 main()  
                 output_path = os.path.join(app.config['OUTPUT_FOLDER'], 'merged.xlsx')
+                logging.info(f"Sending file: {output_path}")
                 return send_file(output_path, as_attachment=True)
             except Exception as e:
+                logging.error(f"Error processing file: {e}")
                 return f"Error: {str(e)}"
     
     return render_template('index.html')
@@ -43,6 +46,7 @@ def search():
 @socketio.on('search_artikul')
 def handle_search_artikul(data):
     artikul = data['artikul']
+    logging.info(f"Received search request for artikul: {artikul}")
     results = []
 
     for url in target_urls:
@@ -52,10 +56,11 @@ def handle_search_artikul(data):
             'url': url + artikul,
             'price': ", ".join(prices) if prices else "Не найдено"
         })
-        logging.info(f"Final data: {prices}")
-        logging.info(f"Scraping completed for URL: {url}{artikul}")
+        logging.info(f"Scraped prices for {url}{artikul}: {prices}")
 
     emit('search_results', results)
+    logging.info(f"Search results emitted for artikul: {artikul}")
 
 if __name__ == '__main__':
+    logging.info("Starting Flask application")
     socketio.run(app, debug=True)

@@ -7,8 +7,10 @@ xlsxwriter==3.1.2
 webdriver-manager==4.0.0
 numpy==1.21.2
 requests
-
+webdriver_manager
+selenium
+flask_socketio
 #pip install pandas
 #pip install webdriver_manager 
 #pip install selenium
-#pip install flask_socketio3
+#pip install flask_socketio
