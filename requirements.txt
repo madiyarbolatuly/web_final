@@ -9,7 +9,9 @@ numpy==1.21.2
 requests
 webdriver_manager
 selenium
-flask_socketio
+
+gunicorn==20.1.0
+eventlet==0.33.0
 #pip install pandas
 #pip install webdriver_manager 
 #pip install selenium

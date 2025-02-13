@@ -63,4 +63,4 @@ def handle_search_artikul(data):
 
 if __name__ == '__main__':
     logging.info("Starting Flask application")
-    socketio.run(app, debug=True)
+    socketio.run(app)
