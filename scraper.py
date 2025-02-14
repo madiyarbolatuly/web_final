@@ -7,7 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
-import logging
 import re
 import os
 import time
@@ -18,7 +17,6 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "C:/Users/Madiyar/Desktop/GQ/scraper_final/uploads"
 app.config['OUTPUT_FOLDER'] = 'C:/Users/Madiyar/Desktop/GQ/scraper_final/outputs'
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -33,18 +31,14 @@ chrome_options.add_argument('--ignore-certificate-errors')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def clean_price(price_text):    
-    logging.info(f"Cleaning price: {price_text}")
     price_text = price_text.replace('\xa0', ' ')
     match = re.search(r'(\d[\d\s]*[.,]?\d{0,2})', price_text)
     if match:
         number = match.group(1).replace(' ', '').replace(',', '.')
-        logging.info(f"Cleaned price: {number}")
         return f"{number} "
-    logging.info("Price not found, returning 'Цена по запросу'")
     return "Цена по запросу"
 
 def get_selectors(target_url):
-    logging.info(f"Getting selectors for URL: {target_url}")
     selectors = {
         'nur-electro.kz': ((By.CLASS_NAME, 'products'), (By.CLASS_NAME, 'price')),
         'euroelectric.kz': ((By.CLASS_NAME, 'product-item'), (By.CLASS_NAME, 'product-price')),
@@ -60,14 +54,11 @@ def get_selectors(target_url):
     }
     for key in selectors:
         if key in target_url:
-            logging.info(f"Found selectors for URL: {target_url}")
             return selectors[key]
-    logging.error(f"URL неподдерживается: {target_url}")
     raise ValueError("URL неподдерживается")
 
 def scrape_prices(target_url, query):
     search_url = f"{target_url}{query}"
-    logging.info(f"Scraping prices from URL: {search_url}")
     driver.get(search_url)
 
     product_prices = []
@@ -75,13 +66,11 @@ def scrape_prices(target_url, query):
         product_selector, price_selector = get_selectors(target_url)
         WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(product_selector))
         products = driver.find_elements(*product_selector)
-        logging.info(f"Found {len(products)} products")
 
         for product in products:
             try:
                 #product_link = product.find_element(By.TAG_NAME, 'a').get_attribute('href')
                 #if product_link:
-                    #logging.info(f"Navigating to product link: {product_link}")
                     #driver.get(product_link)
                     #time.sleep(2)
                     #price_text = driver.find_element(*price_selector).text
@@ -90,18 +79,12 @@ def scrape_prices(target_url, query):
                 cleaned_price = clean_price(price_text)
                 product_prices.append(cleaned_price)
             except NoSuchElementException:
-                logging.warning("No price found for product")
                 continue
             except Exception as e:
-                logging.error(f"Error scraping product: {e}")
                 product_prices.append("Ошибка")
-    except Exception as e:
-        logging.error(f"Error scraping prices: {e}")
-    logging.info(f"Scraped prices: {product_prices}")
     return product_prices
 
 def merge_excel_files(parsing_file, scraped_data, output_file, target_urls):
-    logging.info(f"Merging Excel files: {parsing_file} with scraped data")
     with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
         dfs = pd.read_excel(parsing_file, sheet_name=None)
         
@@ -111,15 +94,11 @@ def merge_excel_files(parsing_file, scraped_data, output_file, target_urls):
                 domain_names = [urlparse(url).netloc for url in target_urls]
                 scraped_df = pd.DataFrame(scraped_data[sheet_name], columns=['Артикул'] + domain_names)
                 scraped_df.to_excel(writer, sheet_name=sheet_name, startcol=len(df.columns), index=False)
-    logging.info(f"Excel files merged successfully: {output_file}")
 
 def main():
-    logging.info("Starting main function")
     dfs = pd.read_excel(os.path.join(app.config['UPLOAD_FOLDER'], 'test.xlsx'), sheet_name=None)
-    logging.info(f"Loaded Excel sheets: {list(dfs.keys())}")
     
     search_queries = {sheet: df['Артикул'].dropna().tolist() for sheet, df in dfs.items() if 'Артикул' in df.columns}
-    logging.info(f"Search queries: {search_queries}")
 
     final_data = {sheet: [] for sheet in search_queries}
 
@@ -127,13 +106,10 @@ def main():
         for query in queries:
             row = [query]
             for target_url in target_urls:
-                logging.info(f"Scraping prices for query: {query} from URL: {target_url}")
                 try:
                     prices = scrape_prices(target_url, query)
-                    logging.info(f"Scraped prices: {prices}")
                     row.append(", ".join(prices) if prices else "Не найдено")
                 except Exception as e:
-                    logging.error(f"Failed to scrape {target_url}{query}: {e}")
                     
             final_data[sheet].append(row)
 
@@ -143,7 +119,6 @@ def main():
         os.path.join(app.config['OUTPUT_FOLDER'], 'merged.xlsx'),
         target_urls
     )
-    logging.info("Main function completed successfully")
 
 if __name__ == "__main__":
     try:
